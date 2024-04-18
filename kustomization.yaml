@@ -1,0 +1,161 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: bold-services
+resources:
+  - https://raw.githubusercontent.com/sivakumar-devops/kustomization-improvement/main/manifest/boldbi/namespace.yaml
+  - https://raw.githubusercontent.com/sivakumar-devops/kustomization-improvement/main/manifest/boldbi/configuration/log4net_config.yaml
+  - https://raw.githubusercontent.com/sivakumar-devops/kustomization-improvement/main/manifest/boldbi/configuration/pvclaim_eks.yaml
+  - https://raw.githubusercontent.com/sivakumar-devops/kustomization-improvement/main/manifest/boldbi/service.yaml
+  #- hpa
+  - https://raw.githubusercontent.com/sivakumar-devops/kustomization-improvement/main/manifest/boldbi/deployment.yaml
+  - https://raw.githubusercontent.com/sivakumar-devops/kustomization-improvement/main/manifest/boldbi/configuration/boldbi-ingress.yaml
+  
+#Enter your efs_file_system_id
+patches:
+  - target:
+      kind: PersistentVolume
+      name: bold-fileserver
+    patch: |-
+      - op: replace
+        path: /spec/csi/volumeHandle
+        value: "fs-05f363b8eb0d4babc"
+
+configMapGenerator:
+- name: bold-bi-config
+  namespace: bold-services
+  literals:
+  #Enter Your AppBase URL
+    - APP_BASE_URL=http://aecabc57ff6ba458d8032deb0383112b-793f86f1fa70d287.elb.us-east-1.amazonaws.com
+    - BOLD_SERVICES_HOSTING_ENVIRONMENT=k8s
+    - INSTALL_OPTIONAL_LIBS=mongodb,mysql,influxdb,snowflake,oracle,clickhouse,google
+    - BOLD_SERVICES_USE_SITE_IDENTIFIER=true
+
+- name: branding-config
+  namespace: bold-services
+  # All the branding images variables are accepted as URL.
+  # Image type: png, svg, jpg, jpeg
+  # Ex: https://example.com/loginlogo.jpg
+  literals:
+     # This is the header logo for the application, and the preferred image size is 40 x 40 pixels.
+    - BOLD_SERVICES_BRANDING_MAIN_LOGO=https://i.postimg.cc/FRyqDKPT/branding-header-logo.png
+
+    # This is the login logo for the application, and the preferred image size is 200 x 40 pixels.
+    - BOLD_SERVICES_BRANDING_LOGIN_LOGO=https://i.postimg.cc/FRyqDKPT/branding-header-logo.png
+
+    # This is an email logo, and the preferred image size is 200 x 40 pixels.
+    - BOLD_SERVICES_BRANDING_EMAIL_LOGO=https://i.postimg.cc/FRyqDKPT/branding-header-logo.png
+
+    # This is a favicon, and the preferred image size is 40 x 40 pixels.
+    - BOLD_SERVICES_BRANDING_FAVICON=https://i.postimg.cc/FRyqDKPT/branding-header-logo.png
+
+    # This is powered by the logo, and the preferred size is 100 x 25 pixels.
+    - BOLD_SERVICES_BRANDING_FOOTER_LOGO=https://i.postimg.cc/FRyqDKPT/branding-header-logo.png
+
+     # This is organization name.
+    - BOLD_SERVICES_SITE_NAME=https://i.postimg.cc/FRyqDKPT/branding-header-logo.png
+
+    # This is site identifier, and it will be the part of the application URL.
+    - BOLD_SERVICES_SITE_IDENTIFIER=https://i.postimg.cc/FRyqDKPT/branding-header-logo.png
+  # Note: If you want to use the custom branding, provide the value for all branding variables 
+  # If all variable values are given, application will use the branding images,
+  # otherwise it will take the default logos.
+
+- name: version-config
+  namespace: bold-services
+  literals:
+    - BOLD_SERVICES_BI_API_VERSION=6.19.14 
+    - BOLD_SERVICES_BI_DESIGNER_VERSION=6.19.14 
+    - BOLD_SERVICES_BI_JOBS_VERSION=6.19.14 
+    - BOLD_SERVICES_BI_WEB_VERSION=6.19.14 
+    - BOLD_SERVICES_ID_API_VERSION=6.19.14 
+    - BOLD_SERVICES_ID_WEB_VERSION=6.19.14 
+    - BOLD_SERVICES_UMS_WEB_VERSION=6.19.14 
+    - BOLD_SERVICES_BI_ETL_VERSION=7.2.8 
+
+secretGenerator:
+- name: bold-secret
+  namespace: bold-services
+  literals:
+  - widget_bing_map_enable_secret=true
+  - widget_bing_map_api_key_secret=ApR8dB3rZFArIqIB5pJa3Vux9bRw6B-NO9ShAa4cjpjXaxKC94toIkZGmL-KsE7X
+
+- name: bold-user-secret
+  namespace: bold-services
+  literals:
+  # It should be a valid email.
+  - BOLD_SERVICES_USER_EMAIL=demo123@gmail.com
+
+  # It should meet our password requirements.
+  - BOLD_SERVICES_USER_PASSWORD=Syncfusion@123
+
+- name: bold-db-secret
+  namespace: bold-services
+  literals:
+  # Type of database server can be used for configuring the Bold BI. Eg: mssql, mysql and postgresql
+  - BOLD_SERVICES_DB_TYPE=postgresql
+
+  # Name of the Database Server
+  - BOLD_SERVICES_DB_HOST=mypostgresql26.postgres.database.azure.com
+
+  # The system will use the following default port numbers based on the database server type.
+  # PostgrSQL – 5234 and MySQL -3306
+  # Please specify the port number for your database server if it is configured on a different port.
+  # For MS SQL Server, this parameter is not necessary.
+  - BOLD_SERVICES_DB_PORT=5432
+
+  # Username for the database server
+  # Please refer to this documentation for information on the user's permissions.
+  # https://help.boldbi.com/embedded-bi/faq/what-are-the-database-permissions-required-to-set-up-bold-bi-embedded/
+  - BOLD_SERVICES_DB_USER=postgres
+
+  # The database user's password
+  - BOLD_SERVICES_DB_PASSWORD=Syncfusion@123
+
+  # If the database name is not specified, the system will create a new database called bold services.
+  # If you specify a database name, it should already exist on the server.
+  - BOLD_SERVICES_DB_NAME=
+
+  # For PostgreSQL DB Servers, this is an optional parameter.
+  # The system will use the database name postgres by default.
+  # If your database server uses a different default database, please provide it here.
+  - BOLD_SERVICES_POSTGRESQL_MAINTENANCE_DB=
+
+  # If your database server requires additional connection string parameters, include them here
+  # Connection string parameters can be found in the official document.
+  # My SQL: https://dev.mysql.com/doc/connector-net/en/connector-net-8-0-connection-options.html
+  # PostgreSQL: https://www.npgsql.org/doc/connection-string-parameters.html
+  # MS SQL: https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlconnection.connectionstring
+  # Note: A semicolon(;) should be used to separate multiple parameters.
+  - BOLD_SERVICES_DB_ADDITIONAL_PARAMETERS=
+
+- name: bold-license-key
+  namespace: bold-services
+  literals:
+  #  The Bold BI licnece key which you have purchesed.
+  - BOLD_SERVICES_UNLOCK_KEY=@362e31382e30UmlchnZOXraw7U0NUyXtvNyHqG5bSX5kI89kFPCXYMI=eyJFbWFpbCI6InZpbm90aGtyaXNobmFtb29ydGh5QHN5bmNmdXNpb24uY29tIiwiUHJvZHVjdHMiOlt7IlRlbmFudElkIjoiMTg1OWNhMTYtZGU2Yi00MjRkLWFlYzYtNzljMDc1OTI0ZDI4IiwiQUlTZXJ2aWNlS2V5IjoiWVdselpYSjJhV05sWDNCeWIyUjFZM1JwYjI1ZlNVUjNUMXBxVkdWc1JVRnpXR0ZyV2xWYWFuVjBkMmgwIiwiRW1haWwiOiJ2aW5vdGhrcmlzaG5hbW9vcnRoeUBzeW5jZnVzaW9uLmNvbSIsIlBsYW4iOnsiUGxhbklkIjoxMTcsIlBsYW5OYW1lIjoiQm9sZCBCSSBQbHVzIiwiSXNNdWx0aVRlbmFudCI6dHJ1ZSwiSXNVc2VyQmFzZWRMaWNlbnNlIjpmYWxzZSwiVXNlcnMiOjAsIklzQXV0aG9yQmFzZWRMaWNlbnNlIjpmYWxzZSwiQXV0aG9ycyI6MCwiRW50ZXJwcmlzZUZlYXR1cmVzIjp7IkN1c3RvbURvbWFpbiI6dHJ1ZSwiVGhpcmRQYXJ0eUxvZ2lucyI6dHJ1ZSwiRGF0YUFsZXJ0cyI6dHJ1ZSwiRGF0YVNvdXJjZUV4dHJhY3RJbnRlcnZhbHMiOiI1bWluLDE1bWluLDMwbWluLDFociw2aHIsMTJociwyNGhyLDF3aywxbW9uIiwiV2hpdGVMYWJlbCI6dHJ1ZSwiRW1iZWQiOnRydWV9fSwiVGVuYW50VHlwZSI6MywiVmVyc2lvbiI6IjYuMTguMTEiLCJFeHBpcnlUaW1lU3RhbXAiOiIxNzM0ODQxMTM0IiwiVGVuYW50U3RhdHVzIjoiQWN0aXZlIiwiU3Vic2NyaXB0aW9uTmFtZSI6ImJvbGRiaS12aW5vdGgiLCJJc1BlcnBldHVhbExpY2Vuc2UiOmZhbHNlfV0sIkxpY2Vuc2VQZXJpb2QiOiIyMDI0LTEyLTIyVDA0OjE4OjU0LjA0MDUyODRaIiwiSXNFU1VzZXIiOmZhbHNlLCJJc1BlcnBldHVhbExpY2Vuc2UiOmZhbHNlfQ==
+images:
+  - name: gcr.io/boldbi-294612/boldbi-server-api
+    newTag: 6.19.14 
+
+  - name: gcr.io/boldbi-294612/boldbi-server-jobs
+    newTag: 6.19.14
+
+  - name: gcr.io/boldbi-294612/boldbi-server
+    newTag: 6.19.14
+
+  - name: gcr.io/boldbi-294612/boldbi-designer
+    newTag: 6.19.14
+
+  - name: gcr.io/boldbi-294612/bold-etl
+    newTag: 7.2.8
+
+  - name: gcr.io/boldbi-294612/bold-identity-api
+    newTag: 6.19.14
+
+  - name: gcr.io/boldbi-294612/bold-ums
+    newTag: 6.19.14
+
+  - name: gcr.io/boldbi-294612/bold-identity
+    newTag: 6.19.14
+generatorOptions:
+  disableNameSuffixHash: true
