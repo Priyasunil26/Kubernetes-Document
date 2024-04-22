@@ -35,7 +35,7 @@ Currently we have provided support for [`Nginx`](https://kubernetes.github.io/in
 
 # Deploying Bold BI on Google Kubernetes Engine (GKE)
 
-1. Download the Kustomization.yaml file below for Bold BI deployment in AKS. <a href="kustomization.yaml" download="kustomization.yaml"> Download YAML File</a>
+1. Download the Kustomization.yaml file below for Bold BI deployment in GKE. <a href="kustomization.yaml" download="kustomization.yaml"> Download YAML File</a>
 
 2. Create a Kubernetes cluster in Google Cloud Platform (GCP) to deploy Bold BI.
 https://console.cloud.google.com/kubernetes
@@ -60,7 +60,7 @@ https://console.cloud.google.com/filestore
 9. After obtaining the External IP address, replace the app-base URL with your External IP address.
     ![App-Base-URL](images/app-base-url.png)
 10. Navigate to the folder where the deployment file were downloaded from Step 1.
-11. Run the following command to deploy Bold BI application on AKS cluster
+11. Run the following command to deploy Bold BI application on GKE cluster
     ```bash
     kubectl apply -k .
 12. If you encounter an issue such as "snippet annotation cannot be used because snippet directives are disabled by the Ingress administrator," then edit the config file and change "allow-snippet-annotation" to true.
@@ -70,7 +70,7 @@ https://console.cloud.google.com/filestore
     ```bash
     kubectl edit cm ingress-nginx-controller -n ingress-nginx
 
-13. Again apply the step 11. Please wait for some time until the Bold BI On-Premise application is deployed to your Microsoft AKS cluster.
+13. Again apply the step 11. Please wait for some time until the Bold BI application is deployed to your Microsoft GKE cluster.
 
 14. Use the following command to get the pods status.
     ```bash 
